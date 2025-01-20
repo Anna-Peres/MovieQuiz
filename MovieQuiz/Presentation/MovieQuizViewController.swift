@@ -15,8 +15,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     private var questionFactory: QuestionFactoryProtocol?
     private var statisticService: StatisticServiceProtocol?
-    private var gameResult: GameResult?
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,8 +23,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         questionFactory.delegate = self
         self.questionFactory = questionFactory
         questionFactory.requestNextQuestion()
-        let statisticService = StatisticService()
-        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        statisticService = StatisticService()
+        statisticService?.store(correct: correctAnswers, total: questionsAmount)
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -120,8 +118,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            
-            let alertModel = AlertModel(alertTitle: "Этот раунд окончен!", alertMessage: "Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(String(describing: statisticService?.gamesCount)) \nРекорд: \(String(describing: statisticService?.bestGame.correct))/\(String(describing: statisticService?.bestGame.total)) \(String(describing: statisticService?.bestGame.date)) \nСредняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? correctAnswers/questionsAmount * 100))%", buttonText: "Сыграть ещё раз", completion: goToStart)
+            guard let statisticService else { return }
+            let alertModel = AlertModel(alertTitle: "Этот раунд окончен!", alertMessage: "Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%", buttonText: "Сыграть ещё раз", completion: goToStart)
             let alertPresenter = AlertPresenter()
             alertPresenter.showAlert(model: alertModel)
             guard let alert = alertPresenter.alert else { return }
