@@ -24,7 +24,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.questionFactory = questionFactory
         questionFactory.requestNextQuestion()
         statisticService = StatisticService()
-        statisticService?.store(correct: correctAnswers, total: questionsAmount)
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -118,8 +117,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
+    
             guard let statisticService else { return }
-            let alertModel = AlertModel(alertTitle: "Этот раунд окончен!", alertMessage: "Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%", buttonText: "Сыграть ещё раз", completion: goToStart)
+            let gamesCount = statisticService.gamesCount
+            var totalAccuracy: Double {
+                if gamesCount != 0 {
+                    Double(statisticService.finalCorrectAnswers * 100 / (10 * statisticService.gamesCount))
+                } else {
+                    Double(correctAnswers * 100 / 10)
+                }
+            }
+            let currentGame = GameResult(correct: correctAnswers, total: questionsAmount, date: Date())
+            statisticService.store(result: currentGame)
+            let alertModel = AlertModel(alertTitle: "Этот раунд окончен!", alertMessage: "Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", totalAccuracy))%", buttonText: "Сыграть ещё раз", completion: goToStart)
             let alertPresenter = AlertPresenter()
             alertPresenter.showAlert(model: alertModel)
             guard let alert = alertPresenter.alert else { return }
