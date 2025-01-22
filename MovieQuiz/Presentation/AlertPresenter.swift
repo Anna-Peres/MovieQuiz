@@ -4,7 +4,7 @@ protocol AlertPresenterDelegate: AnyObject {
     func showAlert()
 }
 
-class AlertPresenter {
+final class AlertPresenter {
     var alert: UIAlertController?
     
     func showAlert(model: AlertModel) {

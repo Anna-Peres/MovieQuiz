@@ -1,7 +1,7 @@
 import Foundation
 
 struct AlertModel {
-    var alertTitle: String
+    let alertTitle: String
     let alertMessage: String
     let buttonText: String
     let completion: () -> ()

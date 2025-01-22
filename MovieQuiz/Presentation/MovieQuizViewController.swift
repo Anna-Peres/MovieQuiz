@@ -24,6 +24,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.questionFactory = questionFactory
         questionFactory.requestNextQuestion()
         statisticService = StatisticService()
+        print(NSHomeDirectory())
     }
     
     // MARK: - QuestionFactoryDelegate
