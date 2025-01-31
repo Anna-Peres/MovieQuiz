@@ -17,6 +17,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var questionFactory: QuestionFactoryProtocol?
     private var statisticService: StatisticServiceProtocol?
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -56,6 +60,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
         imageView.layer.borderWidth = 0
+        hideLoadingIndicator()
     }
     
     private func show(quiz result: QuizResultsViewModel) {
@@ -142,6 +147,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         } else {
             currentQuestionIndex += 1
             self.questionFactory?.requestNextQuestion()
+            showLoadingIndicator()
         }
     }
     
@@ -149,16 +155,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.borderWidth = 0
         currentQuestionIndex = 0
         correctAnswers = 0
-        viewDidLoad()
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
     
     private func showLoadingIndicator() {
-        activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    private func showNetworkError(message: String) {
-        activityIndicator.isHidden = true
+    private func hideLoadingIndicator() {
+        activityIndicator.stopAnimating()
+    }
+    
+    func showNetworkError(message: String) {
+        hideLoadingIndicator()
         let alertModel = AlertModel(alertTitle: "Ошибка",
                                     alertMessage: message,
                                     buttonText: "Попробовать ещё раз",
@@ -170,7 +180,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     func didLoadDataFromServer(){
-        activityIndicator.isHidden = true
         questionFactory?.requestNextQuestion()
     }
     
