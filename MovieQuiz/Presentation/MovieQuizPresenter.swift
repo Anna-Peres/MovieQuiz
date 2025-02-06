@@ -11,6 +11,9 @@ final class MovieQuizPresenter {
     let questionsAmount: Int = 10
     var currentQuestion: QuizQuestion?
     weak var viewController: MovieQuizViewController?
+    var correctAnswers: Int = 0
+    var questionFactory: QuestionFactoryProtocol?
+    var statisticService: StatisticServiceProtocol?
     
     func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
@@ -63,4 +66,33 @@ final class MovieQuizPresenter {
             self?.viewController?.show(quiz: viewModel)
         }
     }
+    
+    func showNextQuestionOrResults() {
+        if self.isLastQuestion() {
+            guard let statisticService else { return }
+            guard let viewController else { return }
+            var totalAccuracy: Double {
+                if statisticService.gamesCount != 0 {
+                    Double(statisticService.finalCorrectAnswers * 100 / (10 * statisticService.gamesCount))
+                } else {
+                    Double(correctAnswers * 100 / 10)
+                }
+            }
+            let currentGame = GameResult(correct: correctAnswers, total: self.questionsAmount, date: Date())
+            statisticService.store(result: currentGame)
+            let alertModel = AlertModel(alertTitle: "Этот раунд окончен!",
+                                        alertMessage: "Ваш результат: \(correctAnswers) из \(self.questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", totalAccuracy))%",
+                                        buttonText: "Сыграть ещё раз",
+                                        completion: viewController.goToStart)
+            let alertPresenter = AlertPresenter()
+            alertPresenter.showAlert(model: alertModel)
+            guard let alert = alertPresenter.alert else { return }
+            alert.present(alert, animated: true, completion: nil)
+        } else {
+            self.switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
+            viewController?.showLoadingIndicator()
+        }
+    }
+    
 }
