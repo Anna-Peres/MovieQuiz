@@ -10,24 +10,24 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var currentQuestionIndex = 0
     private let questionsAmount: Int = 10
     private var currentQuestion: QuizQuestion?
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private var correctAnswers: Int = 0
     private var questionFactory: QuestionFactoryProtocol?
     private let statisticService: StatisticServiceProtocol!
     
-    init(viewController: MovieQuizViewController) {
-            self.viewController = viewController
-            statisticService = StatisticService()
-            questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-            questionFactory?.loadData()
-            viewController.showLoadingIndicator()
-        }
+    init(viewController: MovieQuizViewControllerProtocol) {
+        self.viewController = viewController
+        statisticService = StatisticService()
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
     
     // MARK: - QuestionFactoryDelegate
     
     func didLoadDataFromServer() {
-            questionFactory?.requestNextQuestion()
-        }
+        questionFactory?.requestNextQuestion()
+    }
     
     func didFailToLoadData(with error: Error) {
         viewController?.showNetworkError(message: error.localizedDescription)
@@ -63,20 +63,10 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         didAnswer(isYes: false)
     }
     
-    private func didAnswer(isYes: Bool) {
-           guard let currentQuestion = currentQuestion else {
-               return
-           }
-           
-           let givenAnswer = isYes
-           
-           proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-       }
-    
     func didAnswer(isCorrectAnswer: Bool) {
         if isCorrectAnswer {
-                   correctAnswers += 1
-               }
+            correctAnswers += 1
+        }
     }
     
     
@@ -90,6 +80,16 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.viewController?.show(quiz: viewModel)
         }
+    }
+    
+    private func didAnswer(isYes: Bool) {
+        guard let currentQuestion = currentQuestion else {
+            return
+        }
+        
+        let givenAnswer = isYes
+        
+        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
     private func proceedWithAnswer(isCorrect: Bool) {
@@ -120,7 +120,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             let currentGame = GameResult(correct: correctAnswers, total: questionsAmount, date: Date())
             statisticService.store(result: currentGame)
             let alertModel = AlertModel(alertTitle: "Этот раунд окончен!",
-                                        alertMessage: "Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", totalAccuracy))%",
+                                        alertMessage: """
+Ваш результат: \(correctAnswers) из \(questionsAmount) \nКоличество сыгранных квизов: \(statisticService.gamesCount) \nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString) \nСредняя точность: \(String(format: "%.2f", totalAccuracy))%
+""",
                                         buttonText: "Сыграть ещё раз",
                                         completion: viewController.goToStart)
             viewController.presentAlert(model: alertModel)
@@ -130,5 +132,5 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             viewController?.showLoadingIndicator()
         }
     }
- 
+    
 }

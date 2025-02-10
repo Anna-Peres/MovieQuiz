@@ -8,7 +8,7 @@
 import XCTest
 
 final class MovieQuizUITests: XCTestCase {
-    // swiftlint:disable:next implicitly_unwrapped_optional
+    
     var app: XCUIApplication!
     
     override func setUpWithError() throws {
@@ -93,3 +93,4 @@ final class MovieQuizUITests: XCTestCase {
         XCTAssertEqual(indexLabel.label, "1/10")
     }
 }
+
